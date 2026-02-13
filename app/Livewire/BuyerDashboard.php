@@ -31,7 +31,7 @@ class BuyerDashboard extends Component
         $this->activeOrders = OrderItem::whereHas('order', function ($q) use ($buyerId) {
                 $q->where('buyer_id', $buyerId);
             })
-            ->whereIn('status', ['pending', 'shipped'])
+            ->where('status', 'pending')
             ->distinct('order_id')
             ->count('order_id');
 

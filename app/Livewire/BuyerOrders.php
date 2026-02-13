@@ -7,6 +7,7 @@ use Livewire\WithPagination;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Order;
 use App\Models\OrderItem;
+use App\Notifications\BuyerOrderStatusNotification;
 use Livewire\Attributes\Layout;
 
 #[Layout('layouts.app')]
@@ -37,21 +38,14 @@ class BuyerOrders extends Component
     public function getPendingOrdersProperty()
     {
         return Auth::user()->buyerOrders()
-            ->where('status', 'pending')
-            ->count();
-    }
-
-    public function getDeliveredOrdersProperty()
-    {
-        return Auth::user()->buyerOrders()
-            ->where('status', 'completed')
+            ->whereIn('status', ['pending', 'pending_payment'])
             ->count();
     }
 
     public function getActiveOrdersProperty()
     {
         return Auth::user()->buyerOrders()
-            ->whereIn('status', ['pending', 'shipped'])
+            ->whereIn('status', ['pending', 'pending_payment'])
             ->count();
     }
 
@@ -63,10 +57,25 @@ class BuyerOrders extends Component
             ->first();
 
         if ($order) {
-            $order->update(['status' => 'cancelled']);
+            $reason = 'Order cancelled by buyer request.';
+
+            $order->update([
+                'status' => 'cancelled',
+                'status_reason' => $reason,
+            ]);
             
             // Also cancel all order items
-            $order->items()->update(['status' => 'cancelled']);
+            $order->items()->update([
+                'status' => 'cancelled',
+                'status_reason' => $reason,
+            ]);
+
+            rescue(
+                fn () => Auth::user()?->notify(
+                    new BuyerOrderStatusNotification($order, 'cancelled', $reason, 'Buyer')
+                ),
+                report: false
+            );
             
             // Dispatch events to refresh both sides
             $this->dispatch('order-updated');
@@ -84,9 +93,26 @@ class BuyerOrders extends Component
             )
             ->firstOrFail();
 
-        $item->update(['status' => 'cancelled']);
+        $reason = 'Item cancelled by buyer request.';
+        $item->update([
+            'status' => 'cancelled',
+            'status_reason' => $reason,
+        ]);
 
+        $previousOrderStatus = $item->order->status;
         $item->order->syncStatus();
+
+        $order = $item->order->refresh();
+        if ($order->status === 'cancelled' && $order->status !== $previousOrderStatus) {
+            $order->update(['status_reason' => $reason]);
+
+            rescue(
+                fn () => Auth::user()?->notify(
+                    new BuyerOrderStatusNotification($order, 'cancelled', $reason, 'Buyer')
+                ),
+                report: false
+            );
+        }
 
         // Dispatch events to refresh both sides
         $this->dispatch('order-updated');
@@ -95,31 +121,12 @@ class BuyerOrders extends Component
         session()->flash('success', 'Item cancelled successfully');
     }
 
-    public function markAsReceived($orderId)
-    {
-        $order = Order::where('id', $orderId)
-            ->where('buyer_id', Auth::id())
-            ->where('status', 'shipped')
-            ->first();
-
-        if ($order) {
-            $order->update(['status' => 'delivered']);
-            
-            // Dispatch events to refresh both sides
-            $this->dispatch('order-updated');
-            $this->dispatch('order-updated-buyer');
-            
-            session()->flash('success', 'Order marked as received. Thank you!');
-        }
-    }
-
     public function render()
     {
         return view('livewire.buyer-orders', [
             'orders' => $this->orders,
             'totalOrders' => $this->totalOrders,
             'pendingOrders' => $this->pendingOrders,
-            'deliveredOrders' => $this->deliveredOrders,
             'activeOrders' => $this->activeOrders,
         ]);
     }

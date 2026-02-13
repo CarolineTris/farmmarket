@@ -6,6 +6,7 @@ use Livewire\Component;
 use App\Models\User;
 use App\Models\Product;
 use App\Models\Order;
+use App\Notifications\FarmerVerificationStatusNotification;
 use Livewire\Attributes\Layout;
 
 #[Layout('layouts.app')]
@@ -46,10 +47,10 @@ class AdminDashboard extends Component
         
         // Order Statistics
         $this->totalOrders = Order::count();
-        $this->pendingOrders = Order::where('status', 'pending')->count();
+        $this->pendingOrders = Order::whereIn('status', ['pending', 'pending_payment'])->count();
         
         // Revenue
-        $this->totalRevenue = Order::where('status', 'delivered')->sum('total_amount') ?? 0;
+        $this->totalRevenue = Order::where('status', 'completed')->sum('total_amount') ?? 0;
         
         // FIXED: Use verification_status instead of is_verified
         $this->pendingVerifications = User::where('role', 'farmer')
@@ -95,11 +96,19 @@ class AdminDashboard extends Component
         $user = User::findOrFail($userId);
         
         if ($user->role === 'farmer' && $user->verification_status === 'pending') {
+            $reason = 'Your account has been verified. You can now start selling on FarmMarket.';
+
             $user->update([
                 'verification_status' => 'verified',
+                'verification_notes' => $reason,
                 'verified_at' => now(),
                 'verified_by' => auth()->id(),
             ]);
+
+            rescue(
+                fn () => $user->notify(new FarmerVerificationStatusNotification('verified', $reason)),
+                report: false
+            );
             
             session()->flash('success', 'Farmer verified successfully!');
             $this->loadStats(); // Refresh the stats
@@ -112,11 +121,19 @@ class AdminDashboard extends Component
         $user = User::findOrFail($userId);
         
         if ($user->role === 'farmer' && $user->verification_status === 'pending') {
+            $reason = 'Your farmer verification was rejected. Please update your details and contact support.';
+
             $user->update([
                 'verification_status' => 'rejected',
+                'verification_notes' => "REJECTED: {$reason}",
                 'verified_at' => now(),
                 'verified_by' => auth()->id(),
             ]);
+
+            rescue(
+                fn () => $user->notify(new FarmerVerificationStatusNotification('rejected', $reason)),
+                report: false
+            );
             
             session()->flash('success', 'Farmer rejected successfully!');
             $this->loadStats(); // Refresh the stats

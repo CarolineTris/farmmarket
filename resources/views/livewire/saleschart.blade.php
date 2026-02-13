@@ -20,10 +20,9 @@
       <select wire:change="setCategory($event.target.value)"
         class="px-3 py-1 rounded border border-green-600 text-sm text-green-800 bg-white">
         <option value="all">All Categories</option>
-        <option value="vegetables">Vegetables</option>
-        <option value="fruits">Fruits</option>
-        <option value="grains">Grains</option>
-        <!-- Add more categories as needed -->
+        @foreach($categoryOptions as $value => $label)
+          <option value="{{ $value }}">{{ $label }}</option>
+        @endforeach
       </select>
     </div>
   </div>

@@ -80,8 +80,20 @@
             <p class="text-sm text-gray-600 mb-6">
                 Are you sure you want to {{ $confirmingAction }} this order?
             </p>
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-2">
+                    {{ $confirmingAction === 'cancel' ? 'Cancellation Reason' : 'Completion Note' }}
+                </label>
+                <textarea wire:model.defer="actionReason"
+                          rows="3"
+                          class="w-full rounded border-gray-300 focus:border-green-500 focus:ring-green-500"
+                          placeholder="Enter reason to include in buyer email notification..."></textarea>
+                @error('actionReason')
+                    <p class="text-red-600 text-xs mt-1">{{ $message }}</p>
+                @enderror
+            </div>
             <div class="flex justify-end gap-3">
-                <button wire:click="$set('confirmingOrderId', null)" 
+                <button wire:click="cancelActionConfirmation"
                         class="bg-gray-300 px-4 py-2 rounded hover:bg-gray-400">
                     Cancel
                 </button>

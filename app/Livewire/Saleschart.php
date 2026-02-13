@@ -13,9 +13,11 @@ class SalesChart extends Component
 
     public $viewMode = 'monthly'; // 'monthly' or 'weekly'
     public $category = 'all';     // 'all' or specific category
+    public $categoryOptions = [];
 
     public function mount()
     {
+        $this->categoryOptions = config('product_categories.list', []);
         $this->loadChartData();
     }
 
@@ -27,7 +29,8 @@ class SalesChart extends Component
 
     public function setCategory($category)
     {
-        $this->category = $category;
+        $validCategories = array_keys($this->categoryOptions);
+        $this->category = in_array($category, array_merge(['all'], $validCategories), true) ? $category : 'all';
         $this->loadChartData();
     }
 

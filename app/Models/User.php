@@ -36,7 +36,14 @@ class User extends Authenticatable
         'farm_location',
         'farm_size',
         'crops_grown',
+        'farmer_categories',
+        'phone_number',
+        'farming_experience_years',
+        'capital_injected',
         'verification_notes',
+        'verified_at',
+        'verified_by',
+        'verification_data',
     ];
 
     /**
@@ -70,7 +77,10 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'verified_at' => 'datetime',
             'verification_data' => 'array',
+            'farmer_categories' => 'array',
+            'capital_injected' => 'decimal:2',
         ];
     }
 

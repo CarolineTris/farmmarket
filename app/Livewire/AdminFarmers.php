@@ -5,7 +5,7 @@ namespace App\Livewire;
 use Livewire\Component;
 use Livewire\WithPagination;
 use App\Models\User;
-use Illuminate\Support\Facades\Mail;
+use App\Notifications\FarmerVerificationStatusNotification;
 use Livewire\Attributes\Layout;
 
 #[Layout('layouts.app')]
@@ -28,6 +28,8 @@ class AdminFarmers extends Component
         'location_verified' => false,
         'farm_verified' => false,
         'phone_verified' => false,
+        'experience_verified' => false,
+        'capital_verified' => false,
     ];
     
     public $stats = [];
@@ -67,8 +69,13 @@ class AdminFarmers extends Component
         
         // Load existing verification data
         if ($this->selectedFarmer->verification_data) {
-            $data = json_decode($this->selectedFarmer->verification_data, true);
-            $this->verificationData = array_merge($this->verificationData, $data);
+            $data = is_array($this->selectedFarmer->verification_data)
+                ? $this->selectedFarmer->verification_data
+                : json_decode((string) $this->selectedFarmer->verification_data, true);
+
+            if (is_array($data)) {
+                $this->verificationData = array_merge($this->verificationData, $data);
+            }
         }
         
         // Reset verification checklist for new farmer
@@ -79,6 +86,8 @@ class AdminFarmers extends Component
                 'location_verified' => false,
                 'farm_verified' => false,
                 'phone_verified' => false,
+                'experience_verified' => false,
+                'capital_verified' => false,
             ];
         }
     }
@@ -94,13 +103,18 @@ class AdminFarmers extends Component
         $this->selectedFarmer->update([
             'verification_status' => 'verified',
             'verification_notes' => $this->verificationNotes,
-            'verification_data' => json_encode($this->verificationData),
+            'verification_data' => $this->verificationData,
             'verified_at' => now(),
             'verified_by' => auth()->id(),
         ]);
 
-        // Send verification email (optional)
-        // Mail::to($this->selectedFarmer->email)->send(new FarmerVerifiedMail($this->selectedFarmer));
+        $reason = trim((string) $this->verificationNotes) ?: 'Your account was approved by the admin team.';
+        rescue(
+            fn () => $this->selectedFarmer->notify(
+                new FarmerVerificationStatusNotification('verified', $reason)
+            ),
+            report: false
+        );
 
         session()->flash('success', 'Farmer verified successfully!');
         $this->loadStats();
@@ -122,8 +136,12 @@ class AdminFarmers extends Component
             'verified_by' => auth()->id(),
         ]);
 
-        // Send rejection email (optional)
-        // Mail::to($this->selectedFarmer->email)->send(new FarmerRejectedMail($this->selectedFarmer, $this->rejectionReason));
+        rescue(
+            fn () => $this->selectedFarmer->notify(
+                new FarmerVerificationStatusNotification('rejected', $this->rejectionReason)
+            ),
+            report: false
+        );
 
         session()->flash('error', 'Farmer application rejected.');
         $this->loadStats();
@@ -140,8 +158,13 @@ class AdminFarmers extends Component
             'verification_notes' => "MORE INFO REQUESTED: " . $this->verificationNotes,
         ]);
 
-        // Send email requesting more information
-        // Mail::to($this->selectedFarmer->email)->send(new FarmerMoreInfoRequest($this->selectedFarmer));
+        $reason = trim((string) $this->verificationNotes) ?: 'More information is required to continue verification.';
+        rescue(
+            fn () => $this->selectedFarmer->notify(
+                new FarmerVerificationStatusNotification('more_info', $reason)
+            ),
+            report: false
+        );
 
         session()->flash('info', 'Request for more information sent to farmer.');
     }
@@ -171,6 +194,7 @@ class AdminFarmers extends Component
                 $query->where(function ($q) {
                     $q->where('name', 'like', '%' . $this->search . '%')
                       ->orWhere('email', 'like', '%' . $this->search . '%')
+                      ->orWhere('phone_number', 'like', '%' . $this->search . '%')
                       ->orWhere('id_number', 'like', '%' . $this->search . '%')
                       ->orWhere('farm_location', 'like', '%' . $this->search . '%');
                 });

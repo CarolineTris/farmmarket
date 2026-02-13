@@ -14,6 +14,8 @@ class Product extends Model
         'description',
         'price',
         'quantity',
+        'category',
+        'unit',
         'farmer_id',
         'main_image',          // path to main image
         'additional_images',

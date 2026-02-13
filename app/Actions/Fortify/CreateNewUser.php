@@ -3,6 +3,7 @@
 namespace App\Actions\Fortify;
 
 use App\Models\User;
+use App\Notifications\BuyerWelcomeNotification;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Laravel\Fortify\Contracts\CreatesNewUsers;
@@ -30,12 +31,18 @@ class CreateNewUser implements CreatesNewUsers
         $role = $input['role'] ?? 'buyer';
         $verificationStatus = $role === 'farmer' ? 'pending' : 'verified';
 
-        return User::create([
+        $user = User::create([
             'name' => $input['name'],
             'email' => $input['email'],
             'password' => Hash::make($input['password']),
             'role' => $role,
             'verification_status' => $verificationStatus,
         ]);
+
+        if ($role === 'buyer') {
+            rescue(fn () => $user->notify(new BuyerWelcomeNotification()), report: false);
+        }
+
+        return $user;
     }
 }

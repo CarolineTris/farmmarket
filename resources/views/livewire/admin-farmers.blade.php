@@ -77,6 +77,7 @@
                             </div>
                             <div class="mt-2 text-xs text-gray-500 space-y-1">
                                 <p><i class="fas fa-id-card mr-1"></i> ID: {{ $farmer->id_number ?? 'Not provided' }}</p>
+                                <p><i class="fas fa-phone mr-1"></i> {{ $farmer->phone_number ?? 'No phone number' }}</p>
                                 <p><i class="fas fa-map-marker-alt mr-1"></i> {{ $farmer->farm_location ?? 'No location' }}</p>
                                 <p class="text-xs">Registered: {{ $farmer->created_at->format('M d, Y') }}</p>
                             </div>
@@ -169,8 +170,49 @@
                                     <p class="font-medium">{{ $selectedFarmer->farm_size ?? 'Not provided' }}</p>
                                 </div>
                                 <div>
-                                    <p class="text-sm text-gray-600">Crops Grown</p>
-                                    <p class="font-medium">{{ $selectedFarmer->crops_grown ?? 'Not provided' }}</p>
+                                    <p class="text-sm text-gray-600">Farm Categories</p>
+                                    @php
+                                        $selectedCategories = collect($selectedFarmer->farmer_categories ?? [])
+                                            ->map(fn ($key) => config("product_categories.list.{$key}", $key))
+                                            ->filter()
+                                            ->values();
+                                    @endphp
+                                    @if($selectedCategories->isNotEmpty())
+                                        <div class="flex flex-wrap gap-2 mt-1">
+                                            @foreach($selectedCategories as $categoryLabel)
+                                                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                                    {{ $categoryLabel }}
+                                                </span>
+                                            @endforeach
+                                        </div>
+                                    @else
+                                        <p class="font-medium">{{ $selectedFarmer->crops_grown ?? 'Not provided' }}</p>
+                                    @endif
+                                </div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <h3 class="text-lg font-medium text-gray-900 mb-3 flex items-center">
+                                <i class="fas fa-briefcase text-purple-500 mr-2"></i>
+                                Experience and Capital
+                            </h3>
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <div>
+                                    <p class="text-sm text-gray-600">Phone Number</p>
+                                    <p class="font-medium">{{ $selectedFarmer->phone_number ?? 'Not provided' }}</p>
+                                </div>
+                                <div>
+                                    <p class="text-sm text-gray-600">Farming Experience</p>
+                                    <p class="font-medium">
+                                        {{ is_null($selectedFarmer->farming_experience_years) ? 'Not provided' : $selectedFarmer->farming_experience_years . ' years' }}
+                                    </p>
+                                </div>
+                                <div>
+                                    <p class="text-sm text-gray-600">Capital Injected</p>
+                                    <p class="font-medium">
+                                        {{ is_null($selectedFarmer->capital_injected) ? 'Not provided' : 'UGX ' . number_format((float) $selectedFarmer->capital_injected, 2) }}
+                                    </p>
                                 </div>
                             </div>
                         </div>
@@ -185,8 +227,10 @@
                                     ['key' => 'id_verified', 'label' => 'ID number matches document'],
                                     ['key' => 'document_clear', 'label' => 'Document is clear and legible'],
                                     ['key' => 'location_verified', 'label' => 'Farm location is valid'],
-                                    ['key' => 'farm_verified', 'label' => 'Farm details are reasonable'],
-                                    ['key' => 'phone_verified', 'label' => 'Phone number verified (if provided)'],
+                                    ['key' => 'farm_verified', 'label' => 'Farm details and selected categories are reasonable'],
+                                    ['key' => 'phone_verified', 'label' => 'Phone number is valid and reachable'],
+                                    ['key' => 'experience_verified', 'label' => 'Farming experience is reviewed and reasonable'],
+                                    ['key' => 'capital_verified', 'label' => 'Capital injected amount is reviewed and reasonable'],
                                 ] as $check)
                                 <label class="flex items-center">
                                     <input type="checkbox" 
@@ -283,11 +327,13 @@
                         <i class="fas fa-lightbulb mr-2"></i>Verification Guidelines
                     </h4>
                     <ul class="text-sm text-yellow-700 space-y-1">
-                        <li>• Always verify ID document is clear and matches the ID number</li>
-                        <li>• Farm location should be a real, plausible farming area</li>
-                        <li>• Farm size should be reasonable for stated crops</li>
-                        <li>• Consider calling the farmer for additional verification if needed</li>
-                        <li>• Document all verification steps in the notes</li>
+                        <li>- Always verify ID document is clear and matches the ID number</li>
+                        <li>- Farm location should be a real, plausible farming area</li>
+                        <li>- Farm size should be reasonable for selected categories</li>
+                        <li>- Confirm phone number is reachable and belongs to the applicant</li>
+                        <li>- Review farming experience and capital for consistency with farm details</li>
+                        <li>- Consider calling the farmer for additional verification if needed</li>
+                        <li>- Document all verification steps in the notes</li>
                     </ul>
                 </div>
             </div>

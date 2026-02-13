@@ -92,16 +92,15 @@
                         <!-- Category -->
                         <div>
                             <label for="category" class="block text-sm font-medium text-gray-700 mb-1">Category</label>
-                            <select name="category" id="category" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent">
+                            <select name="category" id="category" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent" required>
                                 <option value="">Select a category</option>
-                                <option value="vegetables">Vegetables</option>
-                                <option value="fruits">Fruits</option>
-                                <option value="grains">Grains & Cereals</option>
-                                <option value="dairy">Dairy Products</option>
-                                <option value="poultry">Poultry & Eggs</option>
-                                <option value="herbs">Herbs & Spices</option>
-                                <option value="other">Other</option>
+                                @foreach(config('product_categories.list', []) as $value => $label)
+                                    <option value="{{ $value }}" {{ old('category') === $value ? 'selected' : '' }}>{{ $label }}</option>
+                                @endforeach
                             </select>
+                            @error('category')
+                                <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                            @enderror
                         </div>
 
                         <!-- Unit -->

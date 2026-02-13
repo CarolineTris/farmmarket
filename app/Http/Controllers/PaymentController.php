@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\Order;
+use App\Notifications\BuyerOrderStatusNotification;
+use App\Notifications\FarmerNewPaidOrderNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -114,13 +116,56 @@ class PaymentController extends Controller
                 'payment_status' => 'paid',
                 'payment_reference' => $data['flw_ref'] ?? $txId,
                 'status' => 'pending',
+                'status_reason' => 'Payment confirmed. Order is pending farmer fulfillment.',
                 'paid_at' => now(),
             ]);
+
+            rescue(
+                fn () => optional($order->buyer)->notify(
+                    new BuyerOrderStatusNotification(
+                        $order,
+                        'pending',
+                        'Payment received successfully. Farmers can now fulfill your order.',
+                        'System'
+                    )
+                ),
+                report: false
+            );
+
+            $order->loadMissing('items.farmer');
+            $order->items
+                ->groupBy('farmer_id')
+                ->each(function ($items) use ($order) {
+                    $farmer = $items->first()?->farmer;
+
+                    rescue(
+                        fn () => optional($farmer)->notify(
+                            new FarmerNewPaidOrderNotification($order, $items->count())
+                        ),
+                        report: false
+                    );
+                });
 
             return redirect()->route('buyer.orders')->with('success', 'Payment successful. Your order is now pending fulfillment.');
         }
 
-        $order->update(['payment_status' => 'failed']);
+        $order->update([
+            'payment_status' => 'failed',
+            'status_reason' => 'Payment failed or was cancelled at the payment gateway.',
+        ]);
+
+        rescue(
+            fn () => optional($order->buyer)->notify(
+                new BuyerOrderStatusNotification(
+                    $order,
+                    'payment_failed',
+                    'Payment failed. Please retry payment to continue with this order.',
+                    'System'
+                )
+            ),
+            report: false
+        );
+
         return redirect()->route('buyer.orders')->with('error', 'Payment was not successful.');
     }
 }

@@ -2,19 +2,20 @@
 
 namespace App\Livewire;
 
-use Livewire\Component;
 use App\Models\Order;
 use App\Models\OrderItem;
-use App\Models\Product;
+use App\Notifications\BuyerOrderStatusNotification;
 use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Layout;
+use Livewire\Component;
 
 #[Layout('layouts.app')]
 class Orders extends Component
 {
     public $items;
-    public $confirmingOrderId= null;
+    public $confirmingOrderId = null;
     public $confirmingAction = null;
+    public $actionReason = '';
 
     public function mount()
     {
@@ -33,33 +34,64 @@ class Orders extends Component
     {
         $this->confirmingOrderId = $itemId;
         $this->confirmingAction = $action;
+        $this->actionReason = $action === 'cancel'
+            ? 'Cancelled by farmer due to product availability or delivery issues.'
+            : 'Completed by farmer. Item was fulfilled successfully.';
     }
 
-    
+    public function cancelActionConfirmation()
+    {
+        $this->reset(['confirmingOrderId', 'confirmingAction', 'actionReason']);
+    }
+
     public function executeAction()
     {
+        $this->validate([
+            'actionReason' => 'required|string|min:5|max:500',
+        ]);
+
         $item = OrderItem::where('id', $this->confirmingOrderId)
             ->where('farmer_id', auth()->id())
+            ->with(['order.buyer', 'product'])
             ->firstOrFail();
 
-        if ($this->confirmingAction === 'complete' && $item->status === 'pending') {
-            $item->update(['status' => 'completed']);
+        $reason = trim($this->actionReason);
+        $order = $item->order;
+        $previousOrderStatus = $order->status;
 
-            // reduce stock
+        if ($this->confirmingAction === 'complete' && $item->status === 'pending') {
+            $item->update([
+                'status' => 'completed',
+                'status_reason' => $reason,
+            ]);
+
             $item->product->decrement('quantity', $item->quantity);
         }
 
         if ($this->confirmingAction === 'cancel' && $item->status !== 'cancelled') {
-            $item->update(['status' => 'cancelled']);
+            $item->update([
+                'status' => 'cancelled',
+                'status_reason' => $reason,
+            ]);
         }
 
-        // 🔥 sync parent order
-        $item->order->syncStatus();
+        $order->syncStatus();
+        $order->refresh();
 
-        $this->reset(['confirmingOrderId', 'confirmingAction']);
+        if (in_array($order->status, ['completed', 'cancelled'], true) && $order->status !== $previousOrderStatus) {
+            $order->update(['status_reason' => $reason]);
+
+            rescue(
+                fn () => optional($order->buyer)->notify(
+                    new BuyerOrderStatusNotification($order, $order->status, $reason, auth()->user()?->name)
+                ),
+                report: false
+            );
+        }
+
+        $this->reset(['confirmingOrderId', 'confirmingAction', 'actionReason']);
         $this->loadOrders();
 
-        // refresh both dashboards/views
         $this->dispatch('order-updated');
         $this->dispatch('order-updated-buyer');
 
@@ -72,12 +104,11 @@ class Orders extends Component
     private function updateOrderStatusIfAllCompleted($orderId)
     {
         $order = Order::with('items')->find($orderId);
-        
-        // Check if all items are either completed or cancelled
+
         $allItemsCompleted = $order->items->every(function ($item) {
             return in_array($item->status, ['completed', 'cancelled']);
         });
-        
+
         if ($allItemsCompleted) {
             $order->update(['status' => 'completed']);
         }
@@ -86,12 +117,11 @@ class Orders extends Component
     private function updateOrderStatusIfAllCancelled($orderId)
     {
         $order = Order::with('items')->find($orderId);
-        
-        // Check if all items are cancelled
+
         $allItemsCancelled = $order->items->every(function ($item) {
             return $item->status === 'cancelled';
         });
-        
+
         if ($allItemsCancelled) {
             $order->update(['status' => 'cancelled']);
         }
@@ -105,16 +135,28 @@ class Orders extends Component
             ->firstOrFail();
 
         DB::transaction(function () use ($item) {
-
-            // Reduce stock
             $item->product->decrement('quantity', $item->quantity);
 
-            // Mark item completed
-            $item->update(['status' => 'completed']);
+            $item->update([
+                'status' => 'completed',
+                'status_reason' => 'Completed by farmer.',
+            ]);
 
-            // Update parent order status
             $item->order->syncStatus();
         });
+
+        $order = $item->order()->with('buyer')->first();
+        if ($order && $order->status === 'completed') {
+            $reason = 'All items were completed by the farmer.';
+            $order->update(['status_reason' => $reason]);
+
+            rescue(
+                fn () => optional($order->buyer)->notify(
+                    new BuyerOrderStatusNotification($order, 'completed', $reason, auth()->user()?->name)
+                ),
+                report: false
+            );
+        }
 
         session()->flash('success', 'Order item completed');
     }
@@ -123,7 +165,6 @@ class Orders extends Component
     {
         $item = OrderItem::findOrFail($itemId);
 
-        // Authorization check
         if (
             auth()->id() !== $item->farmer_id &&
             auth()->id() !== $item->order->buyer_id
@@ -131,16 +172,32 @@ class Orders extends Component
             abort(403);
         }
 
-        $item->update(['status' => 'cancelled']);
+        $item->update([
+            'status' => 'cancelled',
+            'status_reason' => 'Cancelled by farmer/admin action.',
+        ]);
 
         $item->order->syncStatus();
 
+        $order = $item->order()->with('buyer')->first();
+        if ($order && $order->status === 'cancelled') {
+            $reason = 'All items were cancelled for this order.';
+            $order->update(['status_reason' => $reason]);
+
+            rescue(
+                fn () => optional($order->buyer)->notify(
+                    new BuyerOrderStatusNotification($order, 'cancelled', $reason, auth()->user()?->name)
+                ),
+                report: false
+            );
+        }
+
         session()->flash('success', 'Order item cancelled');
     }
-
 
     public function render()
     {
         return view('livewire.orders');
     }
 }
+

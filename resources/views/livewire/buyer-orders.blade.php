@@ -39,13 +39,14 @@
                 <td class="px-4 py-3">
                     <!-- Show item status if available, otherwise order status -->
                     @php
-                        $itemStatus = $order->payment_status !== 'paid' ? 'pending_payment' : ($item->status ?? $order->status);
+                        $orderStatus = $order->computed_status ?? $order->status;
+                        $itemStatus = $orderStatus === 'pending_payment'
+                            ? 'pending_payment'
+                            : ($item->status ?? $orderStatus);
                     @endphp
                     <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
                         @if($itemStatus === 'completed') bg-green-100 text-green-800
-                        @elseif($itemStatus === 'delivered') bg-green-100 text-green-800
                         @elseif($itemStatus === 'pending' || $itemStatus === 'pending_payment') bg-yellow-100 text-yellow-800
-                        @elseif($itemStatus === 'shipped') bg-blue-100 text-blue-800
                         @elseif($itemStatus === 'cancelled') bg-red-100 text-red-800
                         @else bg-gray-100 text-gray-800
                         @endif">
@@ -60,12 +61,6 @@
                     class="text-red-600 hover:underline"
                     onclick="return confirm('Are you sure you want to cancel this order?')">
                     Cancel Item
-                  </button>
-                @elseif($item->status === 'shipped')
-                  <button 
-                    wire:click="markAsReceived({{ $order->id }})" 
-                    class="text-green-600 hover:underline">
-                    Mark as Received
                   </button>
                 @else
                   <span class="text-gray-400">No actions</span>

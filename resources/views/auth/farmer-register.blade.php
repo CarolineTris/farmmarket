@@ -36,6 +36,10 @@
                         <x-label for="password_confirmation" value="{{ __('Confirm Password') }}" />
                         <x-input id="password_confirmation" class="block mt-1 w-full" type="password" name="password_confirmation" required autocomplete="new-password" />
                     </div>
+                    <div>
+                        <x-label for="phone_number" value="{{ __('Phone Number') }}" />
+                        <x-input id="phone_number" class="block mt-1 w-full" type="text" name="phone_number" :value="old('phone_number')" required placeholder="e.g., 2567XXXXXXXX" />
+                    </div>
                 </div>
             </div>
 
@@ -71,9 +75,39 @@
                         <x-label for="farm_size" value="{{ __('Farm Size (Acres)') }}" />
                         <x-input id="farm_size" class="block mt-1 w-full" type="text" name="farm_size" :value="old('farm_size')" required placeholder="e.g., 5 acres" />
                     </div>
+                </div>
+
+                <div class="mb-4">
+                    <x-label value="{{ __('Farm Categories (Select one or more)') }}" />
+                    <div class="mt-2 grid grid-cols-2 md:grid-cols-4 gap-3">
+                        @foreach(config('product_categories.list', []) as $key => $label)
+                            <label class="inline-flex items-center rounded border border-gray-200 px-3 py-2 bg-white hover:bg-gray-50">
+                                <input type="checkbox"
+                                       name="farmer_categories[]"
+                                       value="{{ $key }}"
+                                       class="rounded border-gray-300 text-green-600 focus:ring-green-500"
+                                       {{ in_array($key, old('farmer_categories', []), true) ? 'checked' : '' }}>
+                                <span class="ml-2 text-sm text-gray-700">{{ $label }}</span>
+                            </label>
+                        @endforeach
+                    </div>
+                    @error('farmer_categories')
+                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                    @enderror
+                    @error('farmer_categories.*')
+                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                    @enderror
+                </div>
+
+                <!-- Experience and Capital -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                     <div>
-                        <x-label for="crops_grown" value="{{ __('Main Crops Grown') }}" />
-                        <x-input id="crops_grown" class="block mt-1 w-full" type="text" name="crops_grown" :value="old('crops_grown')" required placeholder="e.g., Maize, Beans, Coffee" />
+                        <x-label for="farming_experience_years" value="{{ __('Farming Experience (Years)') }}" />
+                        <x-input id="farming_experience_years" class="block mt-1 w-full" type="number" min="0" max="80" name="farming_experience_years" :value="old('farming_experience_years')" required placeholder="e.g., 8" />
+                    </div>
+                    <div>
+                        <x-label for="capital_injected" value="{{ __('Capital Injected (UGX)') }}" />
+                        <x-input id="capital_injected" class="block mt-1 w-full" type="number" min="0" step="0.01" name="capital_injected" :value="old('capital_injected')" required placeholder="e.g., 2500000" />
                     </div>
                 </div>
                 

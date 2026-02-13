@@ -14,6 +14,7 @@ class OrderItem extends Model
         'price',
         'subtotal',
         'status',
+        'status_reason',
     ];
 
     public function order() {

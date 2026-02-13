@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Product;
+use Illuminate\Validation\Rule;
 
 class ProductController extends Controller
 {
@@ -32,12 +33,14 @@ class ProductController extends Controller
             'name' => 'required|string|max:255',
             'price' => 'required|numeric',
             'quantity' => 'required|integer',
+            'category' => ['required', Rule::in(array_keys(config('product_categories.list', [])))],
+            'unit' => 'nullable|string|max:30',
             'description' => 'nullable|string|max:1000',
             'main_image' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
             'additional_images.*' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
         ]);
 
-        $data = $request->only('name', 'price', 'quantity', 'description');
+        $data = $request->only('name', 'price', 'quantity', 'description', 'category', 'unit');
         $data['farmer_id'] = auth()->id();
 
         if ($request->hasFile('main_image')) {
@@ -82,11 +85,14 @@ class ProductController extends Controller
             'name' => 'required|string|max:255',
             'price' => 'required|numeric',
             'quantity' => 'required|integer',
+            'category' => ['required', Rule::in(array_keys(config('product_categories.list', [])))],
+            'unit' => 'nullable|string|max:30',
+            'description' => 'nullable|string|max:1000',
             'main_image' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
             'additional_images.*' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
         ]);
 
-        $data = $request->only('name', 'price', 'quantity', 'description');
+        $data = $request->only('name', 'price', 'quantity', 'description', 'category', 'unit');
 
         if ($request->hasFile('main_image')) {
             $data['main_image'] = $request->file('main_image')->store('products', 'public');

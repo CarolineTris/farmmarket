@@ -142,5 +142,26 @@
             </div>
         @endif
 
+
+<div
+    x-data="{ show: false, message: '', type: 'success' }"
+    x-on:show-toast.window="
+        type = $event.detail.type || 'success';
+        message = $event.detail.message || '';
+        show = true;
+        setTimeout(() => show = false, 3000);
+    "
+    x-show="show"
+    x-transition
+    class="fixed bottom-4 right-4 z-50 px-6 py-3 rounded-lg shadow-lg text-white"
+    :class="type === 'success' ? 'bg-green-600' : (type === 'error' ? 'bg-red-600' : 'bg-blue-600')"
+    style="display: none;"
+>
+    <div class="flex items-center">
+        <i class="fas mr-2" :class="type === 'success' ? 'fa-check-circle' : (type === 'error' ? 'fa-times-circle' : 'fa-info-circle')"></i>
+        <span x-text="message"></span>
+    </div>
+</div>
+
     </div>
 </div>

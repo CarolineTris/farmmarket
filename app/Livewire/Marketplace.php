@@ -26,15 +26,7 @@ class Marketplace extends Component
     public $sortDirection = 'desc';
 
     // Available categories
-    public $categories = [
-        'vegetables' => 'Vegetables',
-        'fruits' => 'Fruits',
-        'grains' => 'Grains & Cereals',
-        'dairy' => 'Dairy Products',
-        'poultry' => 'Poultry & Eggs',
-        'herbs' => 'Herbs & Spices',
-        'other' => 'Other'
-    ];
+    public $categories = [];
 
     // Available sorting options
     public $sortOptions = [
@@ -56,7 +48,7 @@ class Marketplace extends Component
 
     public function mount()
     {
-        // Initialize any data
+        $this->categories = config('product_categories.list', []);
     }
 
     public function updated($property)

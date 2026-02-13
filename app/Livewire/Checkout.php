@@ -16,6 +16,7 @@ class Checkout extends Component
 {
     public $cartItems;
     public $total = 0;
+    public $paymentMethod = 'cash';
     public $mobileProvider = 'mtn';
     public $phone = '';
 
@@ -43,10 +44,16 @@ class Checkout extends Component
 
     public function placeOrder()
     {
-        $this->validate([
-            'mobileProvider' => 'required|in:mtn,airtel',
-            'phone' => 'required|string|min:9|max:20',
-        ]);
+        $rules = [
+            'paymentMethod' => 'required|in:cash,mobile_money',
+        ];
+
+        if ($this->paymentMethod === 'mobile_money') {
+            $rules['mobileProvider'] = 'required|in:mtn,airtel';
+            $rules['phone'] = 'required|string|min:9|max:20';
+        }
+
+        $this->validate($rules);
 
         $order = null;
 
@@ -55,12 +62,14 @@ class Checkout extends Component
             $order = Order::create([
                 'buyer_id'     => Auth::id(),
                 'total_amount' => $this->total,
-                'status'       => 'pending_payment',
+                'status'       => 'pending',
                 'payment_status' => 'pending',
-                'payment_provider' => 'flutterwave',
+                'payment_provider' => $this->paymentMethod === 'cash'
+                    ? 'cash_on_delivery'
+                    : 'mobile_money_on_delivery',
                 'currency' => 'UGX',
-                'payer_phone' => $this->phone,
-                'payer_network' => $this->mobileProvider,
+                'payer_phone' => $this->paymentMethod === 'mobile_money' ? $this->phone : null,
+                'payer_network' => $this->paymentMethod === 'mobile_money' ? $this->mobileProvider : null,
             ]);
 
             foreach ($this->cartItems as $item) {
@@ -79,7 +88,9 @@ class Checkout extends Component
             CartItem::where('user_id', Auth::id())->delete();
         });
 
-        return redirect()->route('payments.flutterwave.init', $order);
+        return redirect()
+            ->route('buyer.orders')
+            ->with('success', 'Order placed successfully. You will pay on delivery.');
     }
 
     public function render()

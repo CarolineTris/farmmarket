@@ -63,14 +63,14 @@
     <!-- Feature cards -->
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
       <a href="{{ route('marketplace') }}" class="bg-white rounded-lg shadow p-6 flex items-center gap-4 hover:shadow-lg transition hover:scale-[1.02]">
-        <img src="{{ asset('images/marketplace.png') }}" class="w-10 h-10" alt="Marketplace">
+        <img src="{{ asset('images/marketplace.jpg') }}" class="w-10 h-10" alt="Marketplace">
         <div>
           <p class="text-sm text-gray-600">Browse Marketplace</p>
           <p class="text-green-700 font-bold text-lg">Fresh Products</p>
         </div>
       </a>
       <a href="{{ route('buyer.orders') }}" class="bg-white rounded-lg shadow p-6 flex items-center gap-4 hover:shadow-lg transition hover:scale-[1.02]">
-        <img src="{{ asset('images/orders.png') }}" class="w-10 h-10" alt="Orders">
+        <img src="{{ asset('images/orders.jpg') }}" class="w-10 h-10" alt="Orders">
         <div>
           <p class="text-sm text-gray-600">My Orders</p>
           <p class="text-blue-600 font-bold text-lg">Track Purchases</p>
@@ -147,9 +147,8 @@
                 <td class="px-4 py-3 text-sm text-gray-900">UGX {{ number_format($completedSubtotal) }}</td>
                 <td class="px-4 py-3">
                     <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
-                        @if($orderStatus === 'completed' || $orderStatus === 'delivered') bg-green-100 text-green-800
+                        @if($orderStatus === 'completed') bg-green-100 text-green-800
                         @elseif($orderStatus === 'pending' || $orderStatus === 'pending_payment') bg-yellow-100 text-yellow-800
-                        @elseif($orderStatus === 'shipped') bg-blue-100 text-blue-800
                         @else bg-gray-100 text-gray-800
                         @endif">
                         {{ $orderStatusLabel }}

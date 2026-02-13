@@ -46,6 +46,23 @@
                 <!-- Price and Quantity (two-column on md+) -->
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
+                        <label class="block text-sm font-medium text-gray-700">Category</label>
+                        <select name="category"
+                                class="mt-1 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 shadow-sm
+                                       focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500
+                                       hover:border-gray-400 sm:text-sm"
+                                required>
+                            <option value="">Select a category</option>
+                            @foreach(config('product_categories.list', []) as $value => $label)
+                                <option value="{{ $value }}" {{ old('category', $product->category) === $value ? 'selected' : '' }}>{{ $label }}</option>
+                            @endforeach
+                        </select>
+                        @error('category')
+                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    <div>
                         <label class="block text-sm font-medium text-gray-700">Price (UGX)</label>
                         <input type="number" name="price" step="0.01" value="{{ old('price', $product->price) }}"
                                class="mt-1 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 shadow-sm

@@ -15,6 +15,7 @@ class Order extends Model
         'buyer_id',
         'total_amount',
         'status', // e.g. pending, completed, cancelled
+        'status_reason',
         'payment_status', // pending, paid, failed
         'payment_provider',
         'payment_reference',
@@ -76,6 +77,19 @@ class Order extends Model
 
     public function getComputedStatusAttribute()
     {
+        // Normalize legacy terminal status to current canonical status.
+        if ($this->status === 'delivered') {
+            return 'completed';
+        }
+
+        // For pay-on-delivery orders, pending payment should still be treated as pending fulfillment.
+        if (
+            $this->status === 'pending_payment' &&
+            in_array($this->payment_provider, ['cash_on_delivery', 'mobile_money_on_delivery'], true)
+        ) {
+            return 'pending';
+        }
+
         if ($this->payment_status !== 'paid' && $this->status === 'pending_payment') {
             return 'pending_payment';
         }

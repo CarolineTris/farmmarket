@@ -27,25 +27,41 @@
 
     <div class="mt-6 space-y-4">
         <div>
-            <label class="block text-sm text-gray-600 mb-1">Mobile Money Provider</label>
-            <select wire:model="mobileProvider"
+            <label class="block text-sm text-gray-600 mb-1">Way of Payment</label>
+            <select wire:model="paymentMethod"
                 class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent">
-                <option value="mtn">MTN Mobile Money</option>
-                <option value="airtel">Airtel Money</option>
+                <option value="cash">Pay on Delivery - Cash</option>
+                <option value="mobile_money">Pay on Delivery - Mobile Money</option>
             </select>
-            @error('mobileProvider') <p class="text-sm text-red-600 mt-1">{{ $message }}</p> @enderror
+            @error('paymentMethod') <p class="text-sm text-red-600 mt-1">{{ $message }}</p> @enderror
         </div>
-        <div>
-            <label class="block text-sm text-gray-600 mb-1">Mobile Money Number</label>
-            <input type="text" wire:model="phone"
-                placeholder="e.g. 2567XXXXXXXX"
-                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent">
-            @error('phone') <p class="text-sm text-red-600 mt-1">{{ $message }}</p> @enderror
-        </div>
+
+        @if($paymentMethod === 'mobile_money')
+            <div>
+                <label class="block text-sm text-gray-600 mb-1">Mobile Money Provider</label>
+                <select wire:model="mobileProvider"
+                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent">
+                    <option value="mtn">MTN Mobile Money</option>
+                    <option value="airtel">Airtel Money</option>
+                </select>
+                @error('mobileProvider') <p class="text-sm text-red-600 mt-1">{{ $message }}</p> @enderror
+            </div>
+            <div>
+                <label class="block text-sm text-gray-600 mb-1">Mobile Money Number</label>
+                <input type="text" wire:model="phone"
+                    placeholder="e.g. 2567XXXXXXXX"
+                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent">
+                @error('phone') <p class="text-sm text-red-600 mt-1">{{ $message }}</p> @enderror
+            </div>
+        @endif
+
+        <p class="text-sm text-gray-500">
+            Payment is collected when your order is delivered.
+        </p>
     </div>
 
     <button wire:click="placeOrder"
         class="mt-6 w-full bg-green-600 text-white py-3 rounded-lg hover:bg-green-700 transition">
-        Pay with Mobile Money
+        Place Order (Pay on Delivery)
     </button>
 </div>
