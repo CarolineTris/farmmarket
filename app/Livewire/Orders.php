@@ -95,10 +95,7 @@ class Orders extends Component
         $this->dispatch('order-updated');
         $this->dispatch('order-updated-buyer');
 
-        $this->dispatch('toast', [
-            'type' => 'success',
-            'message' => 'Order item updated successfully',
-        ]);
+        $this->dispatch('toast', type: 'success', message: 'Order item updated successfully');
     }
 
     private function updateOrderStatusIfAllCompleted($orderId)
@@ -200,4 +197,3 @@ class Orders extends Component
         return view('livewire.orders');
     }
 }
-

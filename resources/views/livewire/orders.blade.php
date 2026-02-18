@@ -1,4 +1,15 @@
 <div class="p-6">
+    @if (session('success'))
+        <div class="mb-4 rounded border border-green-300 bg-green-100 px-4 py-3 text-green-800">
+            {{ session('success') }}
+        </div>
+    @endif
+
+    @if (session('error'))
+        <div class="mb-4 rounded border border-red-300 bg-red-100 px-4 py-3 text-red-800">
+            {{ session('error') }}
+        </div>
+    @endif
     
     <div class="flex items-center justify-between mb-4">
         <h2 class="text-xl font-bold text-green-800">My Orders</h2>
@@ -108,7 +119,12 @@
 
     <!-- Toast Notification -->
     <div x-data="{ show: false, message: '', type: 'success' }"
-        x-on:toast.window="message = $event.detail.message; type = $event.detail.type; show = true; setTimeout(() => show = false, 3000)"
+        x-on:toast.window="
+            message = $event.detail.message ?? $event.detail[0]?.message ?? '';
+            type = $event.detail.type ?? $event.detail[0]?.type ?? 'success';
+            show = true;
+            setTimeout(() => show = false, 3000)
+        "
         x-show="show"
         x-transition
         class="fixed bottom-5 right-5 px-4 py-2 rounded shadow-lg text-white"
