@@ -166,7 +166,7 @@
           We connect farmers across Kampala and beyond, helping them maximize earnings by selling locally or wherever they get the best price.
         </p>
         <div style="text-align: center; margin-top: 30px;">
-          <a href="#" class="btn btn-success px-4 py-2 ">Get Started</a>
+          <a href="{{ route('login') }}" class="btn btn-success px-4 py-2 ">Get Started</a>
         </div>
       </div>
     </div>
@@ -241,7 +241,7 @@
             </div>
 
             <div class="text-center mt-3">
-                <a href="#" class="btn btn-outline-success">Explore more</a>
+                <a href="{{route('marketplace')}}" class="btn btn-outline-success">Browse Marketplace</a>
             </div>
         </div>
     </section>
