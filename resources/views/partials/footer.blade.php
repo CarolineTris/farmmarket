@@ -38,8 +38,8 @@
                 <!-- Contact & Social -->
                 <div>
                     <h6 class="uppercase font-semibold text-sm text-green-800 mb-3">Contact</h6>
-                    <p class="text-sm mb-1">fm@farmmarket.com</p>
-                    <p class="text-sm">+256 740 445281</p>
+                    <p class="text-sm mb-1">farmmarrket.fm@gmail.com</p>
+                    <p class="text-sm">+256 740445281</p>
                     <div class="flex space-x-4 mt-4">
     <a href="#" class="bg-blue-600 text-white rounded-full p-3 hover:bg-blue-700 transition w-10 h-10 flex items-center justify-center">
         <i class="bi bi-facebook"></i>

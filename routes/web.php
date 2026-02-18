@@ -38,7 +38,9 @@ Route::get('/checkout', \App\Livewire\Checkout::class)
 
 
 
-Route::resource('products', ProductController::class);
+Route::resource('products', ProductController::class)
+    ->except(['index', 'show'])
+    ->middleware(['auth', 'verified_farmer']);
 
 Route::get('/marketplace', Marketplace::class)->name('marketplace');
 
@@ -85,8 +87,12 @@ Route::middleware([
     Route::get('/admin/dashboard', AdminDashboard::class)->name('admin.dashboard');
 
     //farmer listings and orders
-    Route::get('/farmer/listings', Listings::class)->name('farmer.listings');
-    Route::get('/farmer/orders', Orders::class)->name('farmer.orders');
+    Route::get('/farmer/listings', Listings::class)
+        ->middleware('verified_farmer')
+        ->name('farmer.listings');
+    Route::get('/farmer/orders', Orders::class)
+        ->middleware('verified_farmer')
+        ->name('farmer.orders');
 
     
     

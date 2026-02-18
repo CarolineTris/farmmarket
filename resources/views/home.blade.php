@@ -305,8 +305,7 @@
             <!-- Branding -->
             <div class="col-md-4 mb-4">
                 <h5 class="fw-bold">FarmMarket</h5>
-                <p>Connecting small-scale farmers to buyers in Nakawa and across Kampala.<br>
-                We charge a 5% platform fee per transaction.</p>
+                <p>Connecting small-scale farmers to buyers in Nakawa and across Kampala.</p>
             </div>
 
             <!-- Navigation Links -->
@@ -323,8 +322,8 @@
             <!-- Contact & Social -->
             <div class="col-md-4 mb-4">
                 <h6 class="text-uppercase">Contact</h6>
-                <p class="mb-1">fm@farmmarket.example</p>
-                <p>+256 700 000000</p>
+                <p class="mb-1">farmmarrket.fm@gmail.com</p>
+                <p>+256 740445281</p>
                 <div style="margin-top:15px; display:flex;">
                 <a href="#" class="social-icon facebook"><i class="bi bi-facebook"></i></a>
                 <a href="#" class="social-icon instagram"><i class="bi bi-instagram"></i></a>
