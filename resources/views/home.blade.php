@@ -54,7 +54,7 @@
 
 <!-- Navbar -->
  <div id="heroCarousel" class="carousel slide" data-bs-ride="carousel" style="position: relative">
-<nav class="navbar navbar-expand-lg navbar-dark position-absolute w-100" style="top: 0; z-index: 10; background: rgba(0,0,0,0.3);">
+<nav class="navbar navbar-expand-lg navbar-dark w-100" style="background: rgba(0,0,0,0.3);">
   <div class="container">
     <a class="navbar-brand fw-bold text-white" href="{{ route('home') }}">
           <img src="{{ asset('images/logo.png') }}" 
